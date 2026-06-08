@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_1010cd3b70071cdff3c8b60faceccc42 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
+</head>
+<body>
+    
+    
+    <div style="
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index:9999;
+        background: rgba(15,23,42,.92);
+        color:white;
+        padding:16px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,.1);
+        font-size:13px;
+        line-height:1.8;
+        box-shadow:0 8px 24px rgba(0,0,0,.35);
+    ">
+        <b>IGNISROUTE</b><br>
+        🟩 Rota Validada<br>
+        🟥 Rota Bloqueada<br>
+        🟦 Rota de Desvio<br>
+        🟧 Zona de Exclusão<br>
+        🔥 Foco de Calor
+    </div>
+    
+    
+            <div class="folium-map" id="map_1010cd3b70071cdff3c8b60faceccc42" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_1010cd3b70071cdff3c8b60faceccc42 = L.map(
+                "map_1010cd3b70071cdff3c8b60faceccc42",
+                {
+                    center: [-23.549566666666664, -46.631233333333334],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+  "attributionControl": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+
+            
+
+        
+    
+            var tile_layer_0e748ae00fa47a8bda9a19cbf3c18dd5 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": " ",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_0e748ae00fa47a8bda9a19cbf3c18dd5.addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+        
+    
+            var feature_group_3ac6961061acca53ed8a64d9ade219ef = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_e064bc6a90e94b41a4a6aa3d59f45ec6 = L.marker(
+                [-23.5048, -46.6299],
+                {
+}
+            ).addTo(feature_group_3ac6961061acca53ed8a64d9ade219ef);
+        
+    
+            var icon_d6edb589af81e5083b139afa95655bc9 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+            marker_e064bc6a90e94b41a4a6aa3d59f45ec6.bindTooltip(
+                `<div>
+                     Origem
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e064bc6a90e94b41a4a6aa3d59f45ec6.setIcon(icon_d6edb589af81e5083b139afa95655bc9);
+            
+    
+            var marker_055ac97ba7f3506b770ec64d3383f013 = L.marker(
+                [-23.5934, -46.6305],
+                {
+}
+            ).addTo(feature_group_3ac6961061acca53ed8a64d9ade219ef);
+        
+    
+            var icon_bccf29cb2e23110d473bde9dadbc768d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "flag",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+            marker_055ac97ba7f3506b770ec64d3383f013.bindTooltip(
+                `<div>
+                     Destino
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_055ac97ba7f3506b770ec64d3383f013.setIcon(icon_bccf29cb2e23110d473bde9dadbc768d);
+            
+    
+            var poly_line_d8172a58d924f4e355d29fcb83cce02e = L.polyline(
+                [[-23.5048, -46.6299], [-23.5505, -46.6333], [-23.5934, -46.6305]],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#22c55e", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.9, "smoothFactor": 1.0, "stroke": true, "weight": 7}
+            ).addTo(feature_group_3ac6961061acca53ed8a64d9ade219ef);
+        
+    
+            poly_line_d8172a58d924f4e355d29fcb83cce02e.bindTooltip(
+                `<div>
+                     Rota validada
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_3ac6961061acca53ed8a64d9ade219ef.addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+        
+    
+            var feature_group_b68e607df3e20246f9190c64af55fe0a = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_65892e23a9d3448973cb3ed327da7ac1 = L.marker(
+                [-23.6914, -46.5646],
+                {
+}
+            ).addTo(feature_group_b68e607df3e20246f9190c64af55fe0a);
+        
+    
+            var icon_7564db872009e074b7435b5861cac6f6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_153a4ec6721b6699f0c9958b920f09f7 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_47d3b07e4200aee7f969c8f0bc7a7c52 = $(`<div id="html_47d3b07e4200aee7f969c8f0bc7a7c52" style="width: 100.0%; height: 100.0%;">     <b>São Bernardo do Campo - SP</b><br>     Severidade: Crítico<br>     Distância: 2.10 km<br>     Monitorado     </div>`)[0];
+                popup_153a4ec6721b6699f0c9958b920f09f7.setContent(html_47d3b07e4200aee7f969c8f0bc7a7c52);
+            
+        
+
+        marker_65892e23a9d3448973cb3ed327da7ac1.bindPopup(popup_153a4ec6721b6699f0c9958b920f09f7)
+        ;
+
+        
+    
+    
+            marker_65892e23a9d3448973cb3ed327da7ac1.bindTooltip(
+                `<div>
+                     São Bernardo do Campo - SP
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_65892e23a9d3448973cb3ed327da7ac1.setIcon(icon_7564db872009e074b7435b5861cac6f6);
+            
+    
+            var marker_60fd2f111858f7087778b697742a3bec = L.marker(
+                [-23.6639, -46.5383],
+                {
+}
+            ).addTo(feature_group_b68e607df3e20246f9190c64af55fe0a);
+        
+    
+            var icon_fed9f3aafa2994dd207c566fc03712b6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_832e9d0ef7a53cabde1d02f7de31fe64 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_661c35999eabe032a733c7816dbdb5ad = $(`<div id="html_661c35999eabe032a733c7816dbdb5ad" style="width: 100.0%; height: 100.0%;">     <b>Santo André - SP</b><br>     Severidade: Alto<br>     Distância: 3.80 km<br>     Monitorado     </div>`)[0];
+                popup_832e9d0ef7a53cabde1d02f7de31fe64.setContent(html_661c35999eabe032a733c7816dbdb5ad);
+            
+        
+
+        marker_60fd2f111858f7087778b697742a3bec.bindPopup(popup_832e9d0ef7a53cabde1d02f7de31fe64)
+        ;
+
+        
+    
+    
+            marker_60fd2f111858f7087778b697742a3bec.bindTooltip(
+                `<div>
+                     Santo André - SP
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_60fd2f111858f7087778b697742a3bec.setIcon(icon_fed9f3aafa2994dd207c566fc03712b6);
+            
+    
+            var marker_d27a9810ab8528cdc37fae62df0c70e7 = L.marker(
+                [-23.6861, -46.6227],
+                {
+}
+            ).addTo(feature_group_b68e607df3e20246f9190c64af55fe0a);
+        
+    
+            var icon_7acc4578349a57d16f7f7ea4074a7ce8 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_503590f0e7328d9b68a3b8c8b36b2888 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_08e4e1a30e47c8486ba10ee9489ca593 = $(`<div id="html_08e4e1a30e47c8486ba10ee9489ca593" style="width: 100.0%; height: 100.0%;">     <b>Diadema - SP</b><br>     Severidade: Alto<br>     Distância: 4.20 km<br>     Monitorado     </div>`)[0];
+                popup_503590f0e7328d9b68a3b8c8b36b2888.setContent(html_08e4e1a30e47c8486ba10ee9489ca593);
+            
+        
+
+        marker_d27a9810ab8528cdc37fae62df0c70e7.bindPopup(popup_503590f0e7328d9b68a3b8c8b36b2888)
+        ;
+
+        
+    
+    
+            marker_d27a9810ab8528cdc37fae62df0c70e7.bindTooltip(
+                `<div>
+                     Diadema - SP
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d27a9810ab8528cdc37fae62df0c70e7.setIcon(icon_7acc4578349a57d16f7f7ea4074a7ce8);
+            
+    
+            var marker_67e214e03006efd34d2c540d4eeb70fc = L.marker(
+                [-23.6678, -46.4614],
+                {
+}
+            ).addTo(feature_group_b68e607df3e20246f9190c64af55fe0a);
+        
+    
+            var icon_ef6c8d8af854aa3ec4df11c21d72492e = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_84c5598e611beb6822eca9c293337acf = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_5e6b2aeb5a16531eac8746c3bd4c07a7 = $(`<div id="html_5e6b2aeb5a16531eac8746c3bd4c07a7" style="width: 100.0%; height: 100.0%;">     <b>Mauá - SP</b><br>     Severidade: Médio<br>     Distância: 5.60 km<br>     Monitorado     </div>`)[0];
+                popup_84c5598e611beb6822eca9c293337acf.setContent(html_5e6b2aeb5a16531eac8746c3bd4c07a7);
+            
+        
+
+        marker_67e214e03006efd34d2c540d4eeb70fc.bindPopup(popup_84c5598e611beb6822eca9c293337acf)
+        ;
+
+        
+    
+    
+            marker_67e214e03006efd34d2c540d4eeb70fc.bindTooltip(
+                `<div>
+                     Mauá - SP
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_67e214e03006efd34d2c540d4eeb70fc.setIcon(icon_ef6c8d8af854aa3ec4df11c21d72492e);
+            
+    
+            var marker_998560feaa2d937f92b05fcadad47994 = L.marker(
+                [-19.009, -57.653],
+                {
+}
+            ).addTo(feature_group_b68e607df3e20246f9190c64af55fe0a);
+        
+    
+            var icon_fb53334224a5c4da16e293e9aaa997fc = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_8bd9877fa1561bcd960c070cba23b015 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_280ddd4a89cd8763c2a997e63859f41f = $(`<div id="html_280ddd4a89cd8763c2a997e63859f41f" style="width: 100.0%; height: 100.0%;">     <b>Corumbá - MS</b><br>     Severidade: Crítico<br>     Distância: 1.50 km<br>     Monitorado     </div>`)[0];
+                popup_8bd9877fa1561bcd960c070cba23b015.setContent(html_280ddd4a89cd8763c2a997e63859f41f);
+            
+        
+
+        marker_998560feaa2d937f92b05fcadad47994.bindPopup(popup_8bd9877fa1561bcd960c070cba23b015)
+        ;
+
+        
+    
+    
+            marker_998560feaa2d937f92b05fcadad47994.bindTooltip(
+                `<div>
+                     Corumbá - MS
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_998560feaa2d937f92b05fcadad47994.setIcon(icon_fb53334224a5c4da16e293e9aaa997fc);
+            
+    
+            feature_group_b68e607df3e20246f9190c64af55fe0a.addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+        
+    
+            var feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_4388987f5897bedb2e817e34041dcfb5 = L.circle(
+                [-23.6914, -46.5646],
+                {"bubblingMouseEvents": true, "color": "#fb923c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#fb923c", "fillOpacity": 0.1, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 1}
+            ).addTo(feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55);
+        
+    
+            var circle_500f9638b9bb820b7f2a12df44dee55f = L.circle(
+                [-23.6639, -46.5383],
+                {"bubblingMouseEvents": true, "color": "#fb923c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#fb923c", "fillOpacity": 0.1, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 1}
+            ).addTo(feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55);
+        
+    
+            var circle_e25526d79ff1906794307511afbcd784 = L.circle(
+                [-23.6861, -46.6227],
+                {"bubblingMouseEvents": true, "color": "#fb923c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#fb923c", "fillOpacity": 0.1, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 1}
+            ).addTo(feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55);
+        
+    
+            var circle_7524a5ca7b3baec9358d328d17b1b823 = L.circle(
+                [-23.6678, -46.4614],
+                {"bubblingMouseEvents": true, "color": "#fb923c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#fb923c", "fillOpacity": 0.1, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 1}
+            ).addTo(feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55);
+        
+    
+            var circle_5c0871f167bd9ee10ea76d82240b6fd3 = L.circle(
+                [-19.009, -57.653],
+                {"bubblingMouseEvents": true, "color": "#fb923c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#fb923c", "fillOpacity": 0.1, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 1}
+            ).addTo(feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55);
+        
+    
+            feature_group_f1bc8370a8d1ac207eccdf4dcbb6ca55.addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+        
+    
+            L.control.fullscreen(
+                {
+  "position": "topright",
+  "title": "Full Screen",
+  "titleCancel": "Exit Full Screen",
+  "forceSeparateButton": false,
+}
+            ).addTo(map_1010cd3b70071cdff3c8b60faceccc42);
+        
+</script>
+</html>

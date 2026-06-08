@@ -1,0 +1,209 @@
+from typing import Dict, List, Tuple
+
+from utils.haversine import (
+    distance_km,
+    min_distance_to_route,
+)
+
+Route = List[Tuple[float, float]]
+Hotspot = Dict[str, object]
+
+
+SEVERITY_MULTIPLIER = {
+    "alto": 1.25,
+    "médio": 1.0,
+    "medio": 1.0,
+    "baixo": 0.85,
+}
+
+
+DETOUR_OFFSETS = [
+    (-0.07, 0.10),
+    (-0.10, 0.07),
+    (-0.05, 0.12),
+    (0.07, 0.10),
+    (-0.08, -0.08),
+    (0.10, -0.05),
+    (-0.12, 0.05),
+    (0.05, 0.12),
+]
+
+
+def get_route_distance_km(route: Route) -> float:
+    """
+    Calcula o comprimento total da rota.
+    """
+
+    if len(route) < 2:
+        return 0.0
+
+    return sum(
+        distance_km(
+            route[index],
+            route[index + 1],
+        )
+        for index in range(len(route) - 1)
+    )
+
+
+def effective_risk_radius(
+    base_radius_km: float,
+    severity: str,
+) -> float:
+    """
+    Ajusta o raio de risco de acordo com a severidade.
+    """
+
+    multiplier = SEVERITY_MULTIPLIER.get(
+        severity.lower().strip(),
+        1.0,
+    )
+
+    return base_radius_km * multiplier
+
+
+def enrich_hotspot(
+    hotspot: Hotspot,
+    route: Route,
+    risk_radius_km: float,
+) -> Hotspot:
+    """
+    Calcula métricas operacionais de um foco.
+    """
+
+    lat = hotspot.get("latitude")
+    lon = hotspot.get("longitude")
+
+    if lat is None or lon is None:
+        return {}
+
+    severity = str(
+        hotspot.get(
+            "severity",
+            "Médio",
+        )
+    )
+
+    distance = min_distance_to_route(
+        route,
+        (lat, lon),
+    )
+
+    effective_radius = effective_risk_radius(
+        risk_radius_km,
+        severity,
+    )
+
+    return {
+        **hotspot,
+        "distance_km": round(distance, 2),
+        "effective_radius_km": round(
+            effective_radius,
+            2,
+        ),
+    }
+
+
+def is_hotspot_risky(
+    hotspot: Hotspot,
+) -> bool:
+    """
+    Verifica se o foco interfere na rota.
+    """
+
+    return (
+        hotspot["distance_km"]
+        <= hotspot["effective_radius_km"]
+    )
+
+
+def find_risky_hotspots(
+    route: Route,
+    hotspots: List[Hotspot],
+    risk_radius_km: float,
+) -> List[Hotspot]:
+    """
+    Retorna focos que impactam a rota.
+    """
+
+    risky_hotspots = []
+
+    for hotspot in hotspots:
+
+        enriched = enrich_hotspot(
+            hotspot,
+            route,
+            risk_radius_km,
+        )
+
+        if not enriched:
+            continue
+
+        if is_hotspot_risky(enriched):
+            risky_hotspots.append(enriched)
+
+    return sorted(
+        risky_hotspots,
+        key=lambda item: item["distance_km"],
+    )
+
+
+def build_detour_candidate(
+    origin: Tuple[float, float],
+    midpoint: Tuple[float, float],
+    destination: Tuple[float, float],
+    lat_offset: float,
+    lon_offset: float,
+) -> Route:
+    """
+    Gera uma rota candidata para desvio.
+    """
+
+    shifted_midpoint = (
+        midpoint[0] + lat_offset,
+        midpoint[1] + lon_offset,
+    )
+
+    return [
+        origin,
+        shifted_midpoint,
+        destination,
+    ]
+
+
+def create_detour_route(
+    route: Route,
+    hotspots: List[Hotspot],
+    risk_radius_km: float,
+) -> Tuple[Route, bool]:
+    """
+    Busca uma rota alternativa segura.
+    """
+
+    if len(route) < 2:
+        return route, True
+
+    origin = route[0]
+    destination = route[-1]
+    midpoint = route[len(route) // 2]
+
+    for lat_offset, lon_offset in DETOUR_OFFSETS:
+
+        candidate = build_detour_candidate(
+            origin=origin,
+            midpoint=midpoint,
+            destination=destination,
+            lat_offset=lat_offset,
+            lon_offset=lon_offset,
+        )
+
+        risky_hotspots = find_risky_hotspots(
+            candidate,
+            hotspots,
+            risk_radius_km,
+        )
+
+        if not risky_hotspots:
+            return candidate, True
+
+    return route, False
