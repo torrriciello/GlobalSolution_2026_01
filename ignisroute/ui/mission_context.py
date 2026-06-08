@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Literal
 
 from models.route_result import RouteAnalysisResult
+from services.analytics_service import OperationalMetrics, severity_to_risk_level
 
 RiskLevel = Literal["BAIXO", "MODERADO", "ALTO", "CRÍTICO"]
 DecisionAction = Literal["PROSSEGUIR", "DESVIAR", "REAVALIAR", "AGUARDAR"]
@@ -15,57 +16,45 @@ class MissionContext:
     decision_title: str
     decision_detail: str
     mission_status: str
-    estimated_response_min: float
-    containment_index: float
-    diversion_rate: float
     alert_type: str
     alert_message: str
 
 
-def _estimate_response_minutes(distance_km: float) -> float:
-    avg_speed_kmh = 55.0
-    return round((distance_km / avg_speed_kmh) * 60, 1)
-
-
-def build_mission_context(result: RouteAnalysisResult, radius_km: float) -> MissionContext:
-    distance = result.display_distance
-    response_min = _estimate_response_minutes(distance)
-
+def build_mission_context(
+    result: RouteAnalysisResult,
+    metrics: OperationalMetrics,
+    radius_km: float,
+) -> MissionContext:
     if result.scenario.strip().lower() in {"via livre", "livre"}:
         return MissionContext(
             risk_level="BAIXO",
             decision="PROSSEGUIR",
             decision_title="Rota principal autorizada",
             decision_detail=(
-                "Cenário sem ameaças térmicas ativas. A viatura pode seguir o trajeto "
-                "planejado com monitoramento padrão."
+                "Cenário sem focos ativos na base analítica. "
+                "Trajeto validado com monitoramento padrão."
             ),
             mission_status="OPERACIONAL",
-            estimated_response_min=response_min,
-            containment_index=100.0,
-            diversion_rate=0.0,
             alert_type="success",
-            alert_message=(
-                f"Trajeto validado — nenhum foco interfere no raio de {radius_km} km."
-            ),
+            alert_message=f"Trajeto liberado — margem de segurança de {radius_km} km aplicada.",
         )
 
     if result.is_free:
+        risk_level = severity_to_risk_level(metrics.max_severity)
         return MissionContext(
-            risk_level="MODERADO",
+            risk_level=risk_level,
             decision="PROSSEGUIR",
             decision_title="Rota validada com monitoramento",
             decision_detail=(
-                f"{result.monitored_foci_count} foco(s) monitorado(s), "
-                "porém fora da zona de exclusão. Manter vigilância contínua."
+                f"{metrics.total_foci} foco(s) ativos na view, "
+                f"{metrics.interfering_count} interferindo na rota. "
+                f"Severidade máxima: {metrics.max_severity}."
             ),
             mission_status="MONITORAMENTO ATIVO",
-            estimated_response_min=response_min,
-            containment_index=100.0,
-            diversion_rate=0.0,
             alert_type="success",
             alert_message=(
-                f"Rota liberada — {result.monitored_foci_count} foco(s) sob observação."
+                f"Rota liberada — {metrics.total_foci} foco(s) monitorados, "
+                f"distância média {metrics.avg_distance_km:.1f} km."
             ),
         )
 
@@ -76,20 +65,15 @@ def build_mission_context(result: RouteAnalysisResult, radius_km: float) -> Miss
             decision="DESVIAR",
             decision_title="Desvio tático autorizado",
             decision_detail=(
-                f"{result.interfering_foci_count} foco(s) cruzam a rota original. "
-                f"Trajeto alternativo validado (+{max(extra_km, 0):.1f} km)."
+                f"{metrics.interfering_count} foco(s) críticos na rota original. "
+                f"Desvio validado com {result.display_distance:.1f} km "
+                f"(+{max(extra_km, 0):.1f} km)."
             ),
             mission_status="DESVIO ATIVO",
-            estimated_response_min=response_min,
-            containment_index=100.0,
-            diversion_rate=round(
-                (extra_km / result.route_distance_km * 100) if result.route_distance_km else 0,
-                1,
-            ),
             alert_type="warning",
             alert_message=(
-                f"Rota principal interditada — {result.interfering_foci_count} foco(s) "
-                f"dentro do raio de {radius_km} km. Desvio seguro calculado."
+                f"Rota interditada — {metrics.interfering_count} foco(s) dentro da margem "
+                f"de {radius_km} km. Trajeto alternativo calculado."
             ),
         )
 
@@ -98,16 +82,13 @@ def build_mission_context(result: RouteAnalysisResult, radius_km: float) -> Miss
         decision="REAVALIAR",
         decision_title="Interdição sem desvio viável",
         decision_detail=(
-            "Nenhum trajeto alternativo seguro foi encontrado. "
-            "Recomenda-se aguardar contenção ou ampliar parâmetros operacionais."
+            f"{metrics.interfering_count} foco(s) críticos bloqueiam a rota e nenhum "
+            "trajeto alternativo seguro foi encontrado na análise."
         ),
         mission_status="BLOQUEIO TOTAL",
-        estimated_response_min=0.0,
-        containment_index=0.0,
-        diversion_rate=100.0,
         alert_type="danger",
         alert_message=(
-            "Rota bloqueada e desvio indisponível. Missão requer reavaliação imediata."
+            "Rota bloqueada e desvio indisponível. Reavaliar missão com base nos focos ativos."
         ),
     )
 

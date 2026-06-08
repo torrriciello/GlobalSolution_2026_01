@@ -137,18 +137,7 @@ Exemplo:
 DB_URL=postgresql://usuario:senha@host:5432/banco
 ```
 
-OBS: .env já está preenchido no arquivo zipado encaminhado para os professores.
-
-### Banco de dados local
-
-Para criar a tabela e inserir focos de exemplo:
-
-```bash
-python scripts/init_db.py
-python scripts/manage_hotspots.py add --lat -23.5473 --lon -46.5498 --desc "Fumaça em Tatuapé" --severity Médio
-```
-
-Schemas adicionais estão em `database/schemas/`.
+#### OBS: .env já está preenchido no arquivo zipado encaminhado para os professores.
 
 ---
 

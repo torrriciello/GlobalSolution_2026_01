@@ -64,6 +64,7 @@ def _build_hotspot(record: dict) -> Hotspot:
         "sensor": record["nome_sensor"],
         "distance_km": float(record.get("distancia_risco_km") or 0),
         "affected_radius_m": float(record.get("raio_afetado_metros") or 0),
+        "interdiction_min": float(record.get("tempo_interdicao_minutos") or 0) or None,
         "date": str(record["data_completa"]),
     }
 
@@ -79,6 +80,7 @@ def _fetch_from_postgresql(database_url: str) -> list[Hotspot]:
             nome_sensor,
             distancia_risco_km,
             raio_afetado_metros,
+            tempo_interdicao_minutos,
             data_completa
         FROM {VIEW_NAME}
     """

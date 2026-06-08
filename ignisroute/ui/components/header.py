@@ -1,15 +1,21 @@
 import streamlit as st
 
-from ui.constants import APP_TITLE, APP_VERSION, MISSION_REGION
+from ui.constants import APP_TITLE, APP_VERSION
 from ui.mission_context import MissionContext, current_timestamp
 
 
-def render_top_bar(mission: MissionContext, db_connected: bool, data_source: str = "fallback") -> None:
+def render_top_bar(
+    mission: MissionContext,
+    db_connected: bool,
+    data_source: str,
+    region_label: str,
+) -> None:
     if db_connected:
         label = {"postgresql": "POSTGRESQL", "supabase": "SUPABASE REST"}.get(data_source, "CONECTADO")
         db_badge = f'<span class="soc-badge soc-badge--online">● {label}</span>'
     else:
         db_badge = '<span class="soc-badge soc-badge--offline">● MODO DEMONSTRAÇÃO</span>'
+
     risk_class = f"soc-risk--{mission.risk_level.lower()}"
 
     st.markdown(
@@ -23,7 +29,7 @@ def render_top_bar(mission: MissionContext, db_connected: bool, data_source: str
                 </div>
             </div>
             <div class="soc-topbar__center">
-                <span class="soc-topbar__region">📍 {MISSION_REGION}</span>
+                <span class="soc-topbar__region">📍 {region_label}</span>
             </div>
             <div class="soc-topbar__status">
                 {db_badge}

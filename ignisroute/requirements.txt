@@ -3,6 +3,9 @@ streamlit>=1.32.0
 streamlit-folium>=0.18.0
 folium>=0.16.0
 
+# Roteamento viário e HTTP
+requests>=2.31.0
+
 # Banco de dados e configuração
 psycopg2-binary>=2.9.0
 supabase>=2.3.0

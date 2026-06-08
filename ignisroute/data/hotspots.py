@@ -14,6 +14,7 @@ DEFAULT_HOTSPOTS: List[Hotspot] = [
         "sensor": "MODIS-DEMO",
         "distance_km": 0.0,
         "affected_radius_m": 5000.0,
+        "interdiction_min": 45.0,
         "date": "2026-06-06",
     },
     {
@@ -25,6 +26,7 @@ DEFAULT_HOTSPOTS: List[Hotspot] = [
         "sensor": "VIIRS-DEMO",
         "distance_km": 0.0,
         "affected_radius_m": 3000.0,
+        "interdiction_min": 25.0,
         "date": "2026-06-06",
     },
     {
@@ -36,6 +38,7 @@ DEFAULT_HOTSPOTS: List[Hotspot] = [
         "sensor": "MODIS-DEMO",
         "distance_km": 0.0,
         "affected_radius_m": 2000.0,
+        "interdiction_min": 15.0,
         "date": "2026-06-06",
     },
 ]

@@ -38,6 +38,10 @@ class RouteAnalysisResult:
     map_html_path: Optional[str] = None
     detour_found: bool = True
 
+    routing_source: str = "osrm"
+    route_duration_min: float = 0.0
+    detour_duration_min: Optional[float] = None
+
     # =====================================================
     # Computed Properties
     # =====================================================

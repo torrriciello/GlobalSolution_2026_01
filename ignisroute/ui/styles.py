@@ -221,6 +221,46 @@ body,
     border-bottom:1px solid rgba(255,255,255,.08);
 }
 
+.section-title--inline{
+    margin-top:1.5rem !important;
+    margin-bottom:0 !important;
+    padding-bottom:0 !important;
+    border-bottom:none !important;
+}
+
+.soc-section-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1rem;
+    padding-bottom:.75rem;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.soc-section-head__hint{
+    color:var(--muted);
+    font-size:.75rem;
+    font-weight:500;
+    white-space:nowrap;
+}
+
+.soc-chart-panel{
+    background:var(--bg-card);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:16px;
+    padding:1rem 1.1rem 0.5rem;
+    backdrop-filter:blur(14px);
+}
+
+.soc-route-summary--highlight{
+    background:rgba(59,130,246,.08);
+    border:1px solid rgba(59,130,246,.18);
+    border-radius:14px;
+    padding:.85rem 1rem;
+    margin-bottom:1rem;
+}
+
 /* ======================================================
    ALERTAS
 ====================================================== */
@@ -290,6 +330,14 @@ body,
         0 20px 60px rgba(0,0,0,.45);
 
     margin-top:1rem;
+}
+
+.map-container--hero{
+    border:1px solid rgba(52,211,153,.18);
+    box-shadow:
+        0 24px 70px rgba(0,0,0,.5),
+        0 0 0 1px rgba(52,211,153,.08),
+        inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 /* ======================================================
@@ -713,6 +761,28 @@ header{
     font-weight:500;
 }
 
+.soc-kpi--compact{
+    padding:.85rem 1rem;
+}
+
+.soc-kpi--compact .soc-kpi__value{
+    font-size:1.25rem;
+}
+
+.soc-analytics-source{
+    color:var(--muted);
+    font-size:.8rem;
+    margin-bottom:1rem;
+    padding:.6rem .9rem;
+    background:rgba(15,23,42,.5);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;
+}
+
+.soc-analytics-source strong{
+    color:var(--text);
+}
+
 /* ======================================================
    MAP & INTEL PANELS
 ====================================================== */
@@ -728,6 +798,46 @@ header{
     color:#fff;
     font-weight:800;
     font-size:1.05rem;
+}
+
+.soc-panel-header--map{
+    align-items:flex-end;
+    margin-bottom:1rem;
+}
+
+.soc-panel-header__caption{
+    display:block;
+    color:var(--muted);
+    font-size:.75rem;
+    font-weight:500;
+    margin-top:.2rem;
+}
+
+.soc-panel-header__badge--live{
+    animation:soc-pulse-green 2s ease-in-out infinite;
+}
+
+.soc-route-preview{
+    display:grid;
+    gap:.45rem;
+    background:rgba(15,23,42,.65);
+    border:1px solid rgba(52,211,153,.15);
+    border-radius:12px;
+    padding:.75rem .85rem;
+    margin-bottom:1rem;
+    font-size:.78rem;
+}
+
+.soc-route-preview div{
+    display:flex;
+    justify-content:space-between;
+    gap:.75rem;
+    color:var(--muted);
+}
+
+.soc-route-preview strong{
+    color:#34d399;
+    font-weight:700;
 }
 
 .soc-panel-header__badge {
@@ -841,6 +951,7 @@ header{
     white-space:nowrap;
 }
 
+.soc-severity--critical{background:rgba(127,29,29,.35);color:#fecaca;border:1px solid rgba(239,68,68,.35);}
 .soc-severity--high{background:rgba(239,68,68,.2);color:#fca5a5;}
 .soc-severity--medium{background:rgba(245,158,11,.2);color:#fde68a;}
 .soc-severity--low{background:rgba(34,197,94,.2);color:#86efac;}
@@ -897,6 +1008,27 @@ header{
 }
 
 .soc-radius-display strong{color:#f97316;}
+
+.soc-sidebar-db{
+    font-size:.78rem;
+    color:var(--muted);
+    padding:.55rem .75rem;
+    border-radius:10px;
+    margin-bottom:1rem;
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.soc-sidebar-db strong{color:var(--text);}
+
+.soc-sidebar-db--online{
+    background:rgba(34,197,94,.08);
+    border-color:rgba(34,197,94,.15);
+}
+
+.soc-sidebar-db--offline{
+    background:rgba(245,158,11,.08);
+    border-color:rgba(245,158,11,.15);
+}
 
 .soc-sidebar-help{
     background:rgba(15,23,42,.6);
