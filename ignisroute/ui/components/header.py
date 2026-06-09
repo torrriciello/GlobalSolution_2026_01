@@ -11,7 +11,10 @@ def render_top_bar(
     region_label: str,
 ) -> None:
     if db_connected:
-        label = {"postgresql": "POSTGRESQL", "supabase": "SUPABASE REST"}.get(data_source, "CONECTADO")
+        label = {
+            "postgresql": "POSTGRESQL",
+            "supabase": "SUPABASE REST",
+        }.get(data_source, data_source.upper())
         db_badge = f'<span class="soc-badge soc-badge--online">● {label}</span>'
     else:
         db_badge = '<span class="soc-badge soc-badge--offline">● MODO DEMONSTRAÇÃO</span>'

@@ -30,7 +30,7 @@ def render_kpi_dashboard(result: RouteAnalysisResult, metrics: OperationalMetric
         """
         <div class="soc-section-head">
             <p class="section-title section-title--inline">Indicadores operacionais</p>
-            <span class="soc-section-head__hint">Métricas derivadas de vw_focos_incendio</span>
+            <span class="soc-section-head__hint">Métricas derivadas de vw_focos_ativos</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -40,7 +40,7 @@ def render_kpi_dashboard(result: RouteAnalysisResult, metrics: OperationalMetric
     kpi_data = [
         ("Status da via", result.status_label, "Resultado da validação", result.status_css),
         ("Focos críticos", str(metrics.interfering_count), "Interferindo na rota", "status-warn"),
-        ("Focos ativos", str(metrics.total_foci), "Registros na view", "status-info"),
+        ("Focos ativos", str(metrics.active_foci), "Status ATIVO na view", "status-warn"),
         ("Sensores operantes", str(metrics.active_sensors), "Fontes de detecção ativas", "status-info"),
         ("Severidade máxima", metrics.max_severity, "Maior nível detectado", _severity_css(metrics.max_severity)),
         ("Distância média", f"{metrics.avg_distance_km:.1f} km", "Foco → rota planejada", "status-info"),

@@ -1,6 +1,45 @@
 /* ==========================================================
-   VIEW OPERACIONAL COMPLETA
+   DIM_STATUS_OCORRENCIA
 ========================================================== */
+
+CREATE TABLE IF NOT EXISTS Dim_Status_Ocorrencia (
+    id_status INT PRIMARY KEY,
+    descricao_status VARCHAR(30) NOT NULL UNIQUE
+);
+
+INSERT INTO Dim_Status_Ocorrencia (
+    id_status,
+    descricao_status
+)
+VALUES
+    (1, 'ATIVO'),
+    (2, 'MONITORADO'),
+    (3, 'CONTROLADO'),
+    (4, 'EXTINTO')
+ON CONFLICT (id_status)
+DO NOTHING;
+
+
+/* ==========================================================
+   ALTERAÇÃO DA TABELA FATO
+========================================================== */
+
+ALTER TABLE Fato_Ocorrencias_Incendio
+ADD COLUMN IF NOT EXISTS id_status INT;
+
+ALTER TABLE Fato_Ocorrencias_Incendio
+DROP CONSTRAINT IF EXISTS fk_fato_status;
+
+ALTER TABLE Fato_Ocorrencias_Incendio
+ADD CONSTRAINT fk_fato_status
+FOREIGN KEY (id_status)
+REFERENCES Dim_Status_Ocorrencia(id_status);
+
+
+UPDATE Fato_Ocorrencias_Incendio
+SET id_status = 1
+WHERE id_status IS NULL;
+
 
 CREATE OR REPLACE VIEW vw_focos_operacionais AS
 
@@ -84,10 +123,6 @@ INNER JOIN Dim_Status_Ocorrencia st
     ON st.id_status = f.id_status;
 
 
-/* ==========================================================
-   VIEW UTILIZADA PELO IGNISROUTE
-========================================================== */
-
 CREATE OR REPLACE VIEW vw_focos_ativos AS
 
 SELECT *
@@ -98,10 +133,6 @@ WHERE status_ocorrencia IN (
     'MONITORADO'
 );
 
-
-/* ==========================================================
-   DASHBOARD OPERACIONAL
-========================================================== */
 
 CREATE OR REPLACE VIEW vw_dashboard_operacional AS
 
@@ -137,3 +168,22 @@ SELECT
     ) AS tempo_medio_interdicao
 
 FROM vw_focos_operacionais;
+
+
+UPDATE Fato_Ocorrencias_Incendio
+SET id_status = 2
+WHERE id_fato = 1;
+
+
+UPDATE Fato_Ocorrencias_Incendio
+SET id_status = 1
+WHERE id_fato = 2;
+
+
+UPDATE Fato_Ocorrencias_Incendio
+SET id_status = 1
+WHERE id_fato IN (
+    3,
+    4,
+    5
+);

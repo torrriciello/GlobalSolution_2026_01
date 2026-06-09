@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 from supabase import Client, create_client
 
-from data.hotspots import DEFAULT_HOTSPOTS, Hotspot
+from data.hotspots import Hotspot
 from services.db_connection import (
     build_supabase_rest_url,
     connection_kwargs,
@@ -20,11 +20,9 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-VIEW_NAME: Final[str] = "vw_focos_incendio"
+VIEW_NAME: Final[str] = "vw_focos_ativos"
 
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip()
 
 
 @dataclass
@@ -36,8 +34,6 @@ class HotspotLoadResult:
 
 
 def _resolve_supabase_rest_url() -> str:
-    if SUPABASE_URL and SUPABASE_URL.startswith("https://"):
-        return SUPABASE_URL.rstrip("/").replace("/rest/v1", "")
 
     if DATABASE_URL:
         try:
@@ -54,14 +50,24 @@ def _resolve_supabase_rest_url() -> str:
     return ""
 
 
+def _build_description(record: dict) -> str:
+    municipality = str(record.get("nome_municipio", "")).strip()
+    uf = str(record.get("uf", "")).strip()
+    if municipality and uf:
+        return f"{municipality} - {uf}"
+    return str(record.get("description", "Foco operacional")).strip() or "Foco operacional"
+
+
 def _build_hotspot(record: dict) -> Hotspot:
     return {
         "id": record["id_fato"],
         "latitude": float(record["latitude"]),
         "longitude": float(record["longitude"]),
         "severity": record["severity"],
-        "description": record["description"],
+        "description": _build_description(record),
         "sensor": record["nome_sensor"],
+        "status_ocorrencia": str(record.get("status_ocorrencia", "ATIVO")).strip().upper(),
+        "impacto_operacional": str(record.get("impacto_operacional", "MONITORAMENTO")).strip().upper(),
         "distance_km": float(record.get("distancia_risco_km") or 0),
         "affected_radius_m": float(record.get("raio_afetado_metros") or 0),
         "interdiction_min": float(record.get("tempo_interdicao_minutos") or 0) or None,
@@ -76,8 +82,11 @@ def _fetch_from_postgresql(database_url: str) -> list[Hotspot]:
             latitude,
             longitude,
             severity,
-            description,
+            nome_municipio,
+            uf,
             nome_sensor,
+            status_ocorrencia,
+            impacto_operacional,
             distancia_risco_km,
             raio_afetado_metros,
             tempo_interdicao_minutos,
@@ -160,10 +169,10 @@ def load_hotspots() -> HotspotLoadResult:
         last_error = last_error or hint
         logger.warning(hint)
 
-    logger.warning("Fallback ativado — usando dataset local.")
+    logger.warning("Base indisponível — nenhum foco carregado.")
     return HotspotLoadResult(
-        hotspots=DEFAULT_HOTSPOTS.copy(),
+        hotspots=[],
         connected=False,
-        source="fallback",
-        error=last_error,
+        source="unavailable",
+        error=last_error or "Conexão com PostgreSQL necessária para carregar vw_focos_ativos.",
     )

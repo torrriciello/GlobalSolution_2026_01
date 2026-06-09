@@ -62,12 +62,19 @@ CREATE TABLE Dim_Ocorrencia_Fogo (
     id_sensor_satelite INT REFERENCES Dim_Sensor_Satelite(id_sensor_satelite)
 );
 
--- 4. Tabela Fato
+-- 4. Dimensão Status da Ocorrência
+CREATE TABLE Dim_Status_Ocorrencia (
+    id_status INT PRIMARY KEY,
+    descricao_status VARCHAR(30) NOT NULL UNIQUE
+);
+
+-- 5. Tabela Fato
 CREATE TABLE Fato_Ocorrencias_Incendio (
     id_fato INT PRIMARY KEY,
     id_tempo INT REFERENCES Dim_Tempo(id_tempo),
     id_regiao INT REFERENCES Dim_Regiao_Geografica(id_regiao),
     id_ocorrencia_fogo INT REFERENCES Dim_Ocorrencia_Fogo(id_ocorrencia_fogo),
+    id_status INT REFERENCES Dim_Status_Ocorrencia(id_status),
     distancia_risco_km DECIMAL(10, 2),
     tempo_interdicao_minutos INT,
     raio_afetado_metros DECIMAL(10, 2)

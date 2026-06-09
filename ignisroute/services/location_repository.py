@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 from supabase import create_client
 
-from data.hotspots import DEFAULT_HOTSPOTS
 from services.db_connection import (
     build_supabase_rest_url,
     connection_kwargs,
@@ -88,35 +87,6 @@ def _region_from_locations(locations: list[OperationalLocation]) -> str:
     return ", ".join(states) if states else "Área não definida"
 
 
-def _fallback_from_hotspots() -> list[OperationalLocation]:
-    seen: set[str] = set()
-    locations: list[OperationalLocation] = []
-
-    for index, hotspot in enumerate(DEFAULT_HOTSPOTS, start=1):
-        description = str(hotspot.get("description", f"Local {index}")).strip()
-        if description in seen:
-            continue
-        seen.add(description)
-
-        parts = description.split(" - ")
-        municipality = parts[0].strip()
-        uf = parts[-1].strip() if len(parts) > 1 else "—"
-
-        locations.append(
-            OperationalLocation(
-                id=index,
-                name=description.replace(" - ", " — ") if " - " in description else description,
-                municipality=municipality,
-                uf=uf,
-                state=uf,
-                lat=float(hotspot["latitude"]),
-                lon=float(hotspot["longitude"]),
-            )
-        )
-
-    return locations
-
-
 def _resolve_supabase_rest_url() -> str:
     if SUPABASE_URL and SUPABASE_URL.startswith("https://"):
         return SUPABASE_URL.rstrip("/").replace("/rest/v1", "")
@@ -158,21 +128,22 @@ def _fetch_from_postgresql(database_url: str) -> tuple[list[OperationalLocation]
 
 def _fetch_from_supabase(rest_url: str) -> tuple[list[OperationalLocation], str]:
     client = create_client(rest_url, SUPABASE_KEY)
-    response = client.table(VIEW_NAME).select("description,latitude,longitude").execute()
+    response = client.table(VIEW_NAME).select("nome_municipio,uf,latitude,longitude").execute()
     records = getattr(response, "data", [])
 
     seen: set[str] = set()
     locations: list[OperationalLocation] = []
 
     for index, record in enumerate(records, start=1):
-        description = str(record.get("description", "")).strip()
-        if not description or description in seen:
+        municipality = str(record.get("nome_municipio", "")).strip()
+        uf = str(record.get("uf", "")).strip()
+        if not municipality:
             continue
-        seen.add(description)
 
-        parts = description.split(" - ")
-        municipality = parts[0].strip()
-        uf = parts[-1].strip() if len(parts) > 1 else "—"
+        location_key = f"{municipality}|{uf}"
+        if location_key in seen:
+            continue
+        seen.add(location_key)
 
         locations.append(
             OperationalLocation(
@@ -229,13 +200,12 @@ def load_locations() -> LocationLoadResult:
             last_error = f"Supabase REST: {error}"
             logger.warning(last_error)
 
-    fallback = _fallback_from_hotspots()
     return LocationLoadResult(
-        locations=fallback,
+        locations=[],
         connected=False,
-        source="fallback",
-        region_label=_region_from_locations(fallback),
-        error=last_error,
+        source="unavailable",
+        region_label="Base geográfica indisponível",
+        error=last_error or "Conexão com PostgreSQL necessária para carregar localidades.",
     )
 
 

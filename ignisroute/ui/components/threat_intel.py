@@ -72,6 +72,8 @@ def render_threat_intel(result: RouteAnalysisResult, radius_km: float) -> None:
                         {_severity_badge(str(severity))}
                     </div>
                     <div class="hotspot-item__metrics">
+                        <span>🔥 {hotspot.get('status_ocorrencia', 'ATIVO')}</span>
+                        <span>⚠️ {hotspot.get('impacto_operacional', '—')}</span>
                         <span>📏 {hotspot['distance_km']:.2f} km da rota</span>
                         <span>⭕ {hotspot.get('effective_radius_km', radius_km):.2f} km</span>
                         <span>🛰️ {hotspot.get('sensor', '—')}</span>
@@ -95,6 +97,8 @@ def render_threat_intel(result: RouteAnalysisResult, radius_km: float) -> None:
                         {_severity_badge(str(hotspot.get('severity', '—')))}
                     </div>
                     <div class="hotspot-item__metrics">
+                        <span>👁️ {hotspot.get('status_ocorrencia', 'MONITORADO')}</span>
+                        <span>📡 {hotspot.get('impacto_operacional', 'MONITORAMENTO')}</span>
                         <span>📏 {hotspot.get('distance_km', 0):.2f} km</span>
                         <span>🛰️ {hotspot.get('sensor', '—')}</span>
                     </div>

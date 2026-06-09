@@ -9,8 +9,10 @@ from services.hotspot_repository import load_hotspots
 from services.risk_service import (
     create_detour_route,
     effective_risk_radius,
+    filter_operational_hotspots,
     find_risky_hotspots,
     get_route_distance_km,
+    is_monitored_hotspot,
 )
 from services.routing_service import RoutedPath
 from utils.haversine import min_distance_to_route
@@ -58,6 +60,7 @@ def export_analysis_map(
     origin_label: str,
     destination_label: str,
     routing_source: str,
+    detour_found: bool = False,
 ) -> str | None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -72,6 +75,7 @@ def export_analysis_map(
         origin_label=origin_label,
         destination_label=destination_label,
         routing_source=routing_source,
+        detour_found=detour_found,
     )
 
     output_file = OUTPUT_DIR / "rota_tatica.html"
@@ -102,23 +106,36 @@ def analyze_route(
 
     if scenario.strip().lower() in FREE_ROUTE_SCENARIOS:
         hotspots = []
+    else:
+        hotspots = filter_operational_hotspots(hotspots)
 
     annotated_hotspots = annotate_hotspots(hotspots, route, safety_radius_km)
     blocked_hotspots = find_risky_hotspots(route, hotspots, safety_radius_km)
     blocked = bool(blocked_hotspots)
+    monitored_status_count = sum(1 for hotspot in annotated_hotspots if is_monitored_hotspot(hotspot))
 
     detour_route = None
-    detour_found = True
+    detour_found = False
     detour_distance_km = None
     detour_duration_min = None
 
     if blocked:
-        detour_route, detour_found = create_detour_route(route, hotspots, safety_radius_km)
-        if detour_route and detour_found:
+        candidate_route, detour_found = create_detour_route(
+            route,
+            hotspots,
+            safety_radius_km,
+            blocked_hotspots=blocked_hotspots,
+        )
+        if detour_found:
+            detour_route = candidate_route
             detour_distance_km = round(get_route_distance_km(detour_route), 2)
             detour_duration_min = _duration_for_route(detour_route)
 
-    validated_route = detour_route if blocked and detour_found and detour_route else route
+    if blocked and detour_found and detour_route:
+        validated_route = detour_route
+    else:
+        validated_route = route
+
     road_status = "INTERDITADA" if blocked else "LIVRE"
 
     map_html_path = None
@@ -134,12 +151,13 @@ def analyze_route(
             origin_label=origin_label,
             destination_label=destination_label,
             routing_source=routing_source,
+            detour_found=detour_found,
         )
 
     return RouteAnalysisResult(
         road_status=road_status,
         interfering_foci_count=len(blocked_hotspots),
-        monitored_foci_count=len(hotspots),
+        monitored_foci_count=monitored_status_count,
         validated_route=validated_route,
         original_route=route,
         detour_route=detour_route,

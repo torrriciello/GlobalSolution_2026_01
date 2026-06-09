@@ -108,3 +108,63 @@ def min_distance_to_route(
                 min_distance = distance
 
     return round(min_distance, 3)
+
+
+def min_distance_to_route_midsection(
+    route: Iterable[Coordinates],
+    point: Coordinates,
+    trim_fraction: float = 0.15,
+    steps_per_segment: int = 100,
+) -> float:
+    """
+    Mede a menor distância ao trecho central da rota, ignorando
+    os extremos próximos à origem e ao destino operacionais.
+    """
+    route_points = list(route)
+
+    if len(route_points) < 4:
+        return min_distance_to_route(route, point, steps_per_segment)
+
+    start_index = max(1, int(len(route_points) * trim_fraction))
+    end_index = min(len(route_points) - 1, int(len(route_points) * (1 - trim_fraction)))
+
+    if start_index >= end_index:
+        return min_distance_to_route(route, point, steps_per_segment)
+
+    return min_distance_to_route(
+        route_points[start_index:end_index],
+        point,
+        steps_per_segment,
+    )
+
+
+def closest_point_on_route(
+    route: Iterable[Coordinates],
+    point: Coordinates,
+    steps_per_segment: int = 100,
+) -> Tuple[Coordinates, float]:
+    """
+    Retorna o ponto mais próximo na rota e a distância em km.
+    """
+    route_points = list(route)
+
+    if len(route_points) < 2:
+        return point, float("inf")
+
+    closest = route_points[0]
+    min_distance = float("inf")
+
+    for i in range(len(route_points) - 1):
+        start = route_points[i]
+        end = route_points[i + 1]
+
+        for step in range(steps_per_segment + 1):
+            ratio = step / steps_per_segment
+            candidate = interpolate_point(start, end, ratio)
+            distance = distance_km(candidate, point)
+
+            if distance < min_distance:
+                min_distance = distance
+                closest = candidate
+
+    return closest, round(min_distance, 3)

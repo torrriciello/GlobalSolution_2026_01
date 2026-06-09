@@ -56,7 +56,7 @@ class RouteAnalysisResult:
 
     @property
     def has_detour(self) -> bool:
-        return self.detour_route is not None
+        return self.detour_found and self.detour_route is not None
 
     @property
     def effective_route(self) -> Route:

@@ -2,7 +2,7 @@
 
 Sistema desenvolvido para a **Global Solution FIAP 2026**, voltado ao apoio de **Defesa Civil** e **Corpo de Bombeiros** na tomada de decisão durante incêndios florestais.
 
-O IgnisRoute calcula rotas terrestres seguras para viaturas de emergência: extrai coordenadas de focos de calor ativos de um banco relacional, aplica a fórmula de **Haversine** para medir distâncias reais entre incêndios e o trajeto, detecta interseções com zonas de exclusão térmica e recalcula automaticamente um desvio seguro quando necessário.
+O IgnisRoute calcula rotas terrestres seguras para viaturas de emergência: extrai focos operacionais da view `vw_focos_ativos` (PostgreSQL/Supabase), aplica a fórmula de **Haversine** para medir distâncias reais entre incêndios e o trajeto, classifica o impacto com `status_ocorrencia` e `impacto_operacional`, detecta interseções com zonas de exclusão térmica e recalcula automaticamente um desvio seguro via **OSRM** quando necessário.
 
 A interface apresenta um **Centro de Operações Geoespaciais (SOC)** com indicadores táticos, contexto de missão, mapa interativo e exportação de relatórios.
 
@@ -15,22 +15,27 @@ A interface apresenta um **Centro de Operações Geoespaciais (SOC)** com indica
 | Linguagem | Python 3.10+ |
 | Interface | Streamlit + design system SOC customizado |
 | Mapas | Folium + streamlit-folium |
-| Banco de dados | PostgreSQL (`psycopg2`) com fallback Supabase |
+| Banco de dados | PostgreSQL (`psycopg2`) com fallback Supabase REST |
+| Roteamento viário | OSRM — malha rodoviária real |
 | Configuração | python-dotenv |
 
 ---
 
 ## Funcionalidades
 
-- Extração de focos de calor de banco relacional PostgreSQL (prioridade) ou Supabase REST
+- Extração de focos operacionais da view `vw_focos_ativos` (PostgreSQL ou Supabase REST)
+- Classificação operacional por `status_ocorrencia` (ATIVO, MONITORADO, CONTROLADO, EXTINTO)
+- Derivação de `impacto_operacional` (BLOQUEIO, DESVIO, MONITORAMENTO, CONTROLADO, EXTINTO)
 - Cálculo de distância geodésica com fórmula de Haversine
-- Detecção de rota cruzando zona de exclusão térmica (raio configurável)
-- Recálculo de desvio seguro com validação contra focos ativos
-- Raio efetivo ponderado por severidade (Alto / Médio / Baixo)
+- Bloqueio de rota apenas para focos **ATIVOS** dentro da zona de segurança
+- Focos **MONITORADOS** exibidos no mapa sem interferir no trajeto
+- Focos **CONTROLADOS** e **EXTINTOS** ignorados pela análise operacional
+- Roteamento viário real via OSRM com desvio automático e validação de segurança
+- Raio efetivo ponderado por severidade (Crítico / Alto / Médio / Baixo)
+- Mapa tático com rota validada (verde), bloqueada (vermelha) e desvio (azul)
 - Saída estruturada em JSON (`output/analise_rota.json`)
 - Exportação de mapa tático HTML (`output/rota_tatica.html`)
-- Painel SOC com KPIs, recomendação tática e inteligência de ameaças
-- Modo demonstração com dados locais quando o banco não está configurado
+- Painel SOC com KPIs, narrativa operacional e inteligência de ameaças
 
 ---
 
@@ -72,8 +77,7 @@ ignisroute/
 │   └── docs/                   # Dicionário e modelagem
 │
 ├── scripts/
-│   ├── init_db.py              # Criação da tabela hotspots
-│   └── manage_hotspots.py      # CRUD de focos via CLI
+│   └── run_migration.py        # Migração SQL (status_ocorrencia) no Supabase
 │
 └── output/                     # Artefatos gerados (JSON, HTML)
 ```
@@ -129,12 +133,16 @@ cp .env.example .env
 
 | Variável | Prioridade | Descrição |
 |----------|------------|-----------|
-| `DB_URL` | 1 | URL de conexão PostgreSQL |
+| `DB_URL` | 1 | URL de conexão PostgreSQL (Session Pooler Supabase) |
+| `OSRM_URL` | — | Endpoint OSRM (padrão: `router.project-osrm.org`) |
+| `OSRM_TIMEOUT` | — | Timeout da consulta OSRM em segundos (padrão: 12) |
 
 Exemplo:
 
 ```env
 DB_URL=postgresql://usuario:senha@host:5432/banco
+OSRM_URL=https://router.project-osrm.org
+OSRM_TIMEOUT=12
 ```
 
 #### OBS: .env já está preenchido no arquivo zipado encaminhado para os professores.
@@ -155,17 +163,36 @@ Acesse em [http://localhost:8501](http://localhost:8501).
 
 ### Via Livre
 
-Sem focos de calor na análise. A rota principal é validada diretamente.
+Sem focos de calor na análise. A rota principal é validada diretamente sobre a malha viária OSRM.
 
 ### Alerta de Queimada
 
-Focos ativos são carregados do banco (ou fallback local). O sistema:
+Focos operacionais são carregados exclusivamente de `vw_focos_ativos`. O sistema:
 
-1. Calcula a distância mínima de cada foco à rota (Haversine)
-2. Verifica se algum foco está dentro do raio de tolerância
-3. Interdita a rota original, se necessário
-4. Calcula e valida um desvio seguro
-5. Retorna status, contagem de focos, matriz de coordenadas e mapa
+1. Ignora focos com status CONTROLADO ou EXTINTO (já filtrados na view)
+2. Exibe focos MONITORADOS no mapa sem bloquear o trajeto
+3. Calcula a distância mínima de cada foco **ATIVO** à rota (Haversine)
+4. Verifica se algum foco ATIVO está dentro do raio de segurança configurado
+5. Interdita a rota original (vermelha) e desenha a zona de exclusão ao redor do foco
+6. Busca desvio seguro via OSRM (rotas alternativas e waypoints viários)
+7. Retorna status de missão, contagem de focos, matriz de coordenadas e mapa
+
+#### Lógica por status de ocorrência
+
+| `status_ocorrencia` | Efeito na navegação |
+|---------------------|---------------------|
+| ATIVO | Pode bloquear a rota se estiver na zona de segurança |
+| MONITORADO | Visível no mapa; não interfere no trajeto |
+| CONTROLADO | Ignorado pela análise |
+| EXTINTO | Ignorado pela análise |
+
+#### Cenários de demonstração (dados no Supabase)
+
+| Cenário | Configuração | Resultado visual |
+|---------|--------------|------------------|
+| Rota livre | `id_fato = 1` → MONITORADO | Rota verde; foco em observação |
+| Desvio automático | `id_fato = 2` → ATIVO (Alto) | Original vermelha, desvio azul, validada verde |
+| Missão interrompida | `id_fato = 3, 4, 5` → ATIVO (Crítico) | Apenas rota bloqueada; status **MISSÃO INTERROMPIDA** |
 
 ---
 
@@ -184,33 +211,52 @@ Campos principais do resultado:
 {
   "road_status": "LIVRE | INTERDITADA",
   "interfering_foci_count": 0,
-  "monitored_foci_count": 3,
+  "monitored_foci_count": 1,
   "validated_route": [[-23.5048, -46.6299], "..."],
+  "detour_found": true,
+  "routing_source": "osrm",
   "scenario": "Alerta de Queimada",
   "safety_radius_km": 5.0
 }
 ```
+
+Cada foco carregado inclui `status_ocorrencia` e `impacto_operacional` para rastreabilidade operacional.
 
 ---
 
 ## Fluxo de processamento
 
 ```text
-Parâmetros (cenário + raio)
+Parâmetros (cenário + raio + origem/destino)
         │
         ▼
-hotspot_repository ──► PostgreSQL → Supabase → fallback local
+route_builder ──► OSRM (rota viária real)
         │
         ▼
-risk_service ──► Haversine + zona de exclusão térmica
+hotspot_repository ──► vw_focos_ativos (PostgreSQL → Supabase REST)
         │
-        ├── Rota livre ──► validated_route = rota original
+        ▼
+risk_service ──► Haversine + status_ocorrencia
         │
-        └── Rota bloqueada ──► desvio validado ──► validated_route = desvio
+        ├── MONITORADO ──► exibe no mapa, não bloqueia
+        ├── ATIVO fora da zona ──► sem interferência
+        ├── ATIVO na zona + desvio OSRM ──► validated_route = desvio (verde)
+        └── ATIVO na zona sem desvio ──► MISSÃO INTERROMPIDA (rota vermelha)
         │
         ▼
 Exportação JSON + HTML + painel SOC
 ```
+
+### Legenda do mapa tático
+
+| Elemento | Cor | Significado |
+|----------|-----|-------------|
+| Rota validada | Verde (animada) | Trajeto aprovado para a missão |
+| Rota original | Vermelha (tracejada) | Trecho bloqueado por foco ATIVO |
+| Desvio viário | Azul | Alternativa calculada via OSRM |
+| Zona de exclusão | Laranja | Área de risco ao redor do foco bloqueante |
+| Foco crítico | Vermelho pulsante | ATIVO interferindo na rota |
+| Foco monitorado | Âmbar pulsante | MONITORADO em observação |
 
 ---
 
@@ -234,4 +280,4 @@ Projeto desenvolvido para a disciplina **Global Solution 2026 — FIAP**.
 
 ---
 
-**IgnisRoute SOC v2.1** — Global Solution FIAP 2026
+**IgnisRoute SOC v2.2** — Global Solution FIAP 2026

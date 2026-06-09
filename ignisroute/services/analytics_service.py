@@ -31,6 +31,8 @@ def severity_to_risk_level(severity: str) -> str:
 @dataclass
 class OperationalMetrics:
     total_foci: int
+    active_foci: int
+    monitored_foci: int
     active_sensors: int
     max_severity: str
     avg_distance_km: float
@@ -59,6 +61,8 @@ def compute_operational_metrics(
     if not foci:
         return OperationalMetrics(
             total_foci=0,
+            active_foci=0,
+            monitored_foci=0,
             active_sensors=0,
             max_severity="—",
             avg_distance_km=0.0,
@@ -84,8 +88,17 @@ def compute_operational_metrics(
     max_possible = len(foci) * max(SEVERITY_WEIGHTS.values())
     risk_index = round((total_weight / max_possible) * 100, 1) if max_possible else 0.0
 
+    active_foci = sum(
+        1 for foco in foci if str(foco.get("status_ocorrencia", "")).upper() == "ATIVO"
+    )
+    monitored_foci = sum(
+        1 for foco in foci if str(foco.get("status_ocorrencia", "")).upper() == "MONITORADO"
+    )
+
     return OperationalMetrics(
         total_foci=len(foci),
+        active_foci=active_foci,
+        monitored_foci=monitored_foci,
         active_sensors=len(sensors),
         max_severity=max_severity,
         avg_distance_km=round(sum(distances) / len(distances), 2) if distances else 0.0,
@@ -133,6 +146,8 @@ def focos_dataframe(foci: list[dict[str, Any]]) -> pd.DataFrame:
                 "ID",
                 "Local",
                 "Severidade",
+                "Status",
+                "Impacto",
                 "Sensor",
                 "Distância à rota (km)",
                 "Raio afetado (m)",
@@ -152,6 +167,8 @@ def focos_dataframe(foci: list[dict[str, Any]]) -> pd.DataFrame:
                 "Distância à rota (km)": foco.get("distance_km", 0),
                 "Raio afetado (m)": foco.get("affected_radius_m", 0),
                 "Interdição est. (min)": foco.get("interdiction_min") or "—",
+                "Status": foco.get("status_ocorrencia", "—"),
+                "Impacto": foco.get("impacto_operacional", "—"),
                 "Data": foco.get("date", "—"),
             }
         )
